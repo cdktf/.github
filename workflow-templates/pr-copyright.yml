@@ -9,19 +9,22 @@ on:
       - synchronize
       - ready_for_review
   workflow_dispatch: {}
+concurrency: ${{ github.workflow }}-${{ github.head_ref }}
+env:
+  GIT_REF: ${{ github.event.pull_request.head.ref }}
+  GIT_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+  PR_ID: ${{ github.event.pull_request.number }}
 jobs:
   add-to-pr:
     runs-on: ubuntu-latest
-    env:
-      HEAD_REF: ${{ github.event.pull_request.head.ref }}
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ env.GIT_REF }}
+          repository: ${{ env.GIT_REPO }}
       - name: Set git identity
         run: |-
           git config user.name "hashicorp-copywrite[bot]"
@@ -38,4 +41,4 @@ jobs:
         run: |-
           git add .
           git commit -s -m "chore: add required copyright headers"
-          git push origin HEAD:$HEAD_REF
+          git push origin HEAD:$GIT_REF
