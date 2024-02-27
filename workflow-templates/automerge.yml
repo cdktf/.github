@@ -24,6 +24,10 @@ on:
       - reopened
       - synchronize
 concurrency: ${{ github.workflow }}-${{ github.head_ref }}
+env:
+  GIT_REF: ${{ github.event.pull_request.head.ref }}
+  GIT_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+  PR_ID: ${{ github.event.pull_request.number }}
 jobs:
   automerge:
     runs-on: ubuntu-latest
@@ -34,10 +38,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ env.GIT_REF }}
+          repository: ${{ env.GIT_REPO }}
       - name: Turn on automerge for this PR by a trusted user or bot
         if: github.event.pull_request.user.login == 'team-tf-cdk' || contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association) || github.actor == 'dependabot[bot]'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # NOTE: Replace this with the name of your token associated with the team-tf-cdk user
-        run: gh pr merge --auto --squash ${{ github.event.pull_request.number }}
+        run: gh pr merge --auto --squash $PR_ID
